@@ -72,11 +72,7 @@ public class JavaLevelReader implements LevelReader, JavaReaderWriter {
      * @return the folder which the dimension data resides in.
      */
     public static File getDimensionBaseDirectory(File directory, Dimension dimension) {
-        return switch (dimension) {
-            case OVERWORLD -> directory;
-            case NETHER -> new File(directory, "DIM-1");
-            case THE_END -> new File(directory, "DIM1");
-        };
+        return dimension.getJavaDimensionBaseDirectory(directory);
     }
 
     @Override
@@ -90,7 +86,7 @@ public class JavaLevelReader implements LevelReader, JavaReaderWriter {
 
             // Read worlds
             List<Task<Void>> worlds = new ArrayList<>(3);
-            for (Dimension dimension : Dimension.values()) {
+            for (Dimension dimension : converter.getDimensionRegistry().values()) {
                 File dimensionBaseDirectory = getDimensionBaseDirectory(inputDirectory, dimension);
 
                 // Create a world reader if the dimension is present
@@ -135,7 +131,7 @@ public class JavaLevelReader implements LevelReader, JavaReaderWriter {
         output.setPortals(Collections.synchronizedList(new ArrayList<>()));
 
         // Loop through dimensions and parse the POI
-        for (Dimension dimension : Dimension.values()) {
+        for (Dimension dimension : converter.getDimensionRegistry().values()) {
             File poiBaseDirectory = new File(getDimensionBaseDirectory(inputDirectory, dimension), "poi");
 
             // Don't parse if it doesn't exist / it shouldn't be processed
@@ -405,7 +401,7 @@ public class JavaLevelReader implements LevelReader, JavaReaderWriter {
 
         // Create the local player
         return new ChunkerLevelPlayer(
-                Dimension.fromJavaNBT(player.get("Dimension"), Dimension.OVERWORLD),
+                converter.getDimensionRegistry().fromJavaNBT(player.get("Dimension"), Dimension.OVERWORLD),
                 positions.get(0),
                 positions.get(1),
                 positions.get(2),
@@ -551,7 +547,7 @@ public class JavaLevelReader implements LevelReader, JavaReaderWriter {
                     mapCompound.getShort("height", (short) 128),
                     mapCompound.getShort("width", (short) 128),
                     mapCompound.getByte("scale", (byte) 0),
-                    Dimension.fromJavaNBT(mapCompound.get("dimension"), Dimension.OVERWORLD),
+                    converter.getDimensionRegistry().fromJavaNBT(mapCompound.get("dimension"), Dimension.OVERWORLD),
                     mapCompound.getInt("xCenter", 0),
                     mapCompound.getInt("zCenter", 0),
                     mapCompound.getByte("unlimitedTracking", (byte) 0) != 0,
